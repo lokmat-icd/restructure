@@ -493,13 +493,31 @@
         .unit-employee .unit-body .data-table td {
             padding: 6px 10px;
         }
-        .unit-employee .unit-body .data-table .total-row td {
-            background: #e8ecf1;
-            font-weight: 700;
-        }
         .unit-employee .unit-body .data-table .text-cnf {
             color: #dc3545;
             font-weight: 600;
+        }
+
+        /* EMPLOYEE TABLE - 3 Column Layout */
+        .employee-table th {
+            text-align: center;
+            font-size: 13px;
+            padding: 10px 12px;
+        }
+        .employee-table td {
+            text-align: center;
+            padding: 6px 10px;
+            vertical-align: middle;
+        }
+        .employee-table .text-cnf {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .unit-employee .unit-body .data-table td:first-child {
+            border-right: 1px solid #e8ecf1;
+        }
+        .unit-employee .unit-body .data-table td:last-child {
+            border-left: 1px solid #e8ecf1;
         }
 
         /* LOADING & NO DATA */
@@ -569,28 +587,6 @@
             .section-header h3 { font-size: 15px; }
             .section-header .summary-totals { font-size: 11px; gap: 2px 8px; }
         }
-		
-		/* EMPLOYEE TABLE - 3 Column Layout */
-		.employee-table th {
-			text-align: center;
-			font-size: 13px;
-			padding: 10px 12px;
-		}
-		.employee-table td {
-			text-align: center;
-			padding: 6px 10px;
-			vertical-align: middle;
-		}
-		.employee-table .text-cnf {
-			color: #dc3545;
-			font-weight: 600;
-		}
-		.unit-employee .unit-body .data-table td:first-child {
-			border-right: 1px solid #e8ecf1;
-		}
-		.unit-employee .unit-body .data-table td:last-child {
-			border-left: 1px solid #e8ecf1;
-		}
     </style>
 </head>
 <body>
@@ -655,7 +651,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR DEPLOYED URL
 // ============================================================
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyTSI2Sd5P93RDCVGDs_kkRRZ-V-YG57dofGGW6fKwudzsoHUdc4UhWuBTD_PHCq4Ft/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbxR09uye_WsCZ2pqqTEGeBqwiMWI-6ep22vMN6Lp2Ki-P6r1PuH2XWU6igMrUYdoPHi/exec';
 
 // ============================================================
 // GLOBAL STATE
@@ -683,7 +679,6 @@ async function handleLogin() {
         return;
     }
     
-    // Password must be exactly 4 digits
     if (!/^\d{4}$/.test(password)) {
         errorEl.textContent = 'Password must be exactly 4 digits (last 4 digits of mobile).';
         errorEl.classList.add('show');
@@ -702,7 +697,6 @@ async function handleLogin() {
         if (result.success && result.user) {
             loggedInUser = result.user;
             
-            // Parse units if comma separated
             if (loggedInUser.units && typeof loggedInUser.units === 'string') {
                 loggedInUser.units = loggedInUser.units.split(',').map(u => u.trim()).filter(u => u);
             }
@@ -804,15 +798,19 @@ async function loadAllData() {
         
         // Load publication data
         if (isAdmin) {
-            // Admin: Get all units from the publication sheet
             const pubResult = await callAPI('getAllPublication');
             allData.publication = pubResult.success ? pubResult.data : {};
             
-            // Admin: Get all employees
-            const empResult = await callAPI('getEmployees');
-            allData.employees = empResult.success ? empResult.data : {};
+            // Load all three List sheets
+            const listAResult = await callAPI('getListA');
+            allData.listA = listAResult.success ? listAResult.data : {};
+            
+            const listBResult = await callAPI('getListB');
+            allData.listB = listBResult.success ? listBResult.data : {};
+            
+            const listCResult = await callAPI('getListC');
+            allData.listC = listCResult.success ? listCResult.data : {};
         } else {
-            // ICD Head: Get only their units
             const pubResult = await callAPI('getPublication', { units: loggedInUser.units });
             allData.publication = pubResult.success ? pubResult.data : {};
         }
@@ -849,7 +847,9 @@ function renderTabs() {
             { id: 'model-b', label: '📈 Model-B' },
             { id: 'model-c', label: '📈 Model-C' },
             { id: 'publications', label: '📰 Publications' },
-            { id: 'employees', label: '👥 Employees' }
+            { id: 'list-model-a', label: '📋 List-Model-A' },
+            { id: 'list-model-b', label: '📋 List-Model-B' },
+            { id: 'list-model-c', label: '📋 List-Model-C' }
         ];
         tabs.forEach(tab => {
             const active = tab.id === currentTab || (!currentTab && tab.id === 'workload') ? 'active' : '';
@@ -900,8 +900,14 @@ function renderTabContent(tabId) {
             case 'publications':
                 renderPublications(container);
                 break;
-            case 'employees':
-                renderEmployees(container);
+            case 'list-model-a':
+                renderListEmployees(container, 'listA', 'List-Model-A');
+                break;
+            case 'list-model-b':
+                renderListEmployees(container, 'listB', 'List-Model-B');
+                break;
+            case 'list-model-c':
+                renderListEmployees(container, 'listC', 'List-Model-C');
                 break;
             default:
                 container.innerHTML = '<div class="no-data"><i class="fa fa-file"></i>Select a tab</div>';
@@ -958,7 +964,7 @@ function renderWorkload(container) {
 }
 
 // ============================================================
-// RENDER SKILLS (Admin) - UPDATED with totals
+// RENDER SKILLS (Admin)
 // ============================================================
 function renderSkills(container) {
     const data = allData.skills || [];
@@ -968,7 +974,6 @@ function renderSkills(container) {
         return;
     }
     
-    // Calculate totals across all units
     let totalNews = 0, totalCreative = 0, totalEventAdvt = 0, totalExperts = 0;
     let totalNotice = 0, totalPhoto = 0, totalPDF = 0;
     
@@ -1032,7 +1037,7 @@ function renderSkills(container) {
 }
 
 // ============================================================
-// RENDER MODEL (Admin) - UPDATED with totals
+// RENDER MODEL (Admin)
 // ============================================================
 function renderModel(container, modelType, title) {
     const models = allData.models || {};
@@ -1043,7 +1048,6 @@ function renderModel(container, modelType, title) {
         return;
     }
     
-    // Calculate totals across all units
     let totalPD = 0, totalADVT = 0, totalReliever = 0, totalEvent = 0, totalOther = 0;
     
     data.forEach(row => {
@@ -1107,7 +1111,6 @@ function renderPublications(container) {
         return;
     }
     
-    // Calculate grand totals across all units
     let grandTotalPages = 0, grandTotalFresh = 0, grandTotalAlter = 0;
     units.forEach(unit => {
         const unitData = data[unit] || [];
@@ -1216,14 +1219,14 @@ function togglePublication(unitId) {
 }
 
 // ============================================================
-// RENDER EMPLOYEES (Admin - All Units)
+// RENDER LIST EMPLOYEES (Admin - 3 Column Layout)
 // ============================================================
-function renderEmployees(container) {
-    const data = allData.employees || {};
+function renderListEmployees(container, listKey, listTitle) {
+    const data = allData[listKey] || {};
     const units = Object.keys(data);
     
     if (!units || units.length === 0) {
-        container.innerHTML = '<div class="no-data"><i class="fa fa-users"></i>No employee data available</div>';
+        container.innerHTML = `<div class="no-data"><i class="fa fa-users"></i>No employee data available for ${listTitle}</div>`;
         return;
     }
     
@@ -1243,7 +1246,7 @@ function renderEmployees(container) {
     
     let html = `
         <div class="section-header">
-            <h3><i class="fa fa-users"></i> Employees by Unit</h3>
+            <h3><i class="fa fa-users"></i> ${escapeHtml(listTitle)} - Employees by Unit</h3>
             <div class="totals-box">
                 <span>👥 Existing: <span class="num">${grandExisting}</span></span>
                 <span>✅ Proposed: <span class="num">${grandProposed}</span></span>
@@ -1256,7 +1259,6 @@ function renderEmployees(container) {
         const unitData = data[unit] || [];
         if (unitData.length === 0) return;
         
-        // Separate employees by Continue status
         const existing = [];
         const proposed = [];
         const eliminated = [];
@@ -1270,16 +1272,13 @@ function renderEmployees(container) {
             }
         });
         
-        // Sort names alphabetically in each column
         const sortByName = (arr) => arr.sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
         sortByName(existing);
         sortByName(proposed);
         sortByName(eliminated);
         
-        // Determine max rows needed
         const maxRows = Math.max(existing.length, proposed.length, eliminated.length);
-        
-        const unitId = 'emp_unit_' + unit.replace(/[^a-zA-Z0-9]/g, '_');
+        const unitId = 'emp_unit_' + listKey + '_' + unit.replace(/[^a-zA-Z0-9]/g, '_');
         
         html += `
             <div class="unit-employee">
@@ -1336,17 +1335,6 @@ function renderEmployees(container) {
     });
     
     container.innerHTML = html;
-}
-
-function toggleEmployeeUnit(unitId) {
-    const body = document.getElementById(unitId);
-    const icon = document.getElementById(unitId + '_icon');
-    if (body) {
-        body.classList.toggle('open');
-        if (icon) {
-            icon.classList.toggle('open');
-        }
-    }
 }
 
 function toggleEmployeeUnit(unitId) {
