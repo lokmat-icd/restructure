@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICD Central Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        .container-fluid { max-width: 1600px; margin: 0 auto; }
+
+        /* LOGIN OVERLAY - Matching Base Project Style */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #loginOverlay .login-box {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 420px;
+            width: 100%;
+        }
+        #loginOverlay .login-box .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        #loginOverlay .login-box .logo img {
+            width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 8px;
+        }
+        #loginOverlay .login-box h3 {
+            text-align: center;
+            color: #1a3a6b;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        #loginOverlay .login-box p.sub {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        #loginOverlay .login-box .form-group {
+            margin-bottom: 18px;
+        }
+        #loginOverlay .login-box .form-group label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #555;
+        }
+        #loginOverlay .login-box .form-group input {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 10px 14px;
+            font-size: 14px;
+            width: 100%;
+        }
+        #loginOverlay .login-box .form-group input:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 2px rgba(42,82,152,0.15);
+        }
+        #loginOverlay .login-box .login-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #loginOverlay .login-box .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42,82,152,0.3);
+        }
+        #loginOverlay .login-box .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #loginOverlay .login-box .login-error {
+            color: #dc3545;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+        #loginOverlay .login-box .login-error.show { display: block; }
+
+        /* HEADER - Matching Base Project */
+        .header {
+            background: linear-gradient(135deg, #1a3a6b 0%, #2a5298 100%);
+            color: white;
+            padding: 12px 22px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .header-row1 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px 15px;
+            min-height: 48px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .header-logo {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+        }
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 12px 4px 16px;
+            border-radius: 30px;
+            flex-shrink: 0;
+        }
+        .header-user .user-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .header-user .user-role {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+        .header-user .logout-header-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .header-user .logout-header-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* TABS */
+        .tabs-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+            padding: 6px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-bottom: 3px solid #e8ecf1;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .tab-btn:hover {
+            background: #f0f2f5;
+            color: #1a3a6b;
+        }
+        .tab-btn.active {
+            color: #1a3a6b;
+            background: #e8ecf1;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #2a5298;
+        }
+
+        /* TAB CONTENT */
+        .tab-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            min-height: 400px;
+            overflow-x: auto;
+        }
+
+        /* TABLES */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .data-table th {
+            background: #1a3a6b;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e8ecf1;
+            vertical-align: middle;
+        }
+        .data-table tr:hover td {
+            background: #f8f9fa;
+        }
+        .data-table .total-row {
+            background: #e8ecf1 !important;
+            font-weight: 700;
+        }
+        .data-table .total-row td {
+            border-top: 2px solid #1a3a6b;
+        }
+        .data-table .editable-input {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            width: 100%;
+            min-width: 120px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+        .data-table .editable-input:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 2px rgba(42,82,152,0.1);
+        }
+        .data-table .editable-input.text-input {
+            min-width: 140px;
+        }
+        .data-table .editable-input.changed {
+            border-color: #ff9800;
+            background: #fff8e1;
+        }
+
+        .table-responsive-wrapper {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e8ecf1;
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .section-header h3 {
+            margin: 0;
+            color: #1a3a6b;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .section-header .totals-box {
+            display: flex;
+            gap: 20px;
+            background: #f0f2f5;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .section-header .totals-box span {
+            font-weight: 600;
+        }
+        .section-header .totals-box .num {
+            color: #1a3a6b;
+            font-size: 16px;
+        }
+
+        .save-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e8ecf1;
+        }
+        .save-area .save-btn {
+            padding: 8px 24px;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .save-area .save-btn:hover {
+            background: #218838;
+        }
+        .save-area .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .save-area .save-btn.saved {
+            background: #6c757d;
+        }
+        .save-status {
+            font-size: 12px;
+            display: none;
+        }
+        .save-status.show {
+            display: inline-block;
+        }
+        .save-status.saving {
+            color: #ff9800;
+        }
+        .save-status.saved {
+            color: #28a745;
+        }
+        .save-status.error {
+            color: #dc3545;
+        }
+
+        /* PUBLICATION UNITS - Collapsible */
+        .unit-publication {
+            margin-bottom: 24px;
+            border: 1px solid #e8ecf1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .unit-publication .unit-header {
+            background: #f0f2f5;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #1a3a6b;
+            transition: background 0.2s;
+        }
+        .unit-publication .unit-header:hover {
+            background: #e8ecf1;
+        }
+        .unit-publication .unit-header .unit-totals {
+            font-weight: 400;
+            font-size: 13px;
+            color: #555;
+        }
+        .unit-publication .unit-header .unit-totals span {
+            margin-left: 12px;
+        }
+        .unit-publication .unit-header .unit-totals .num {
+            font-weight: 700;
+            color: #1a3a6b;
+        }
+        .unit-publication .unit-body {
+            padding: 0 16px 16px;
+            display: none;
+        }
+        .unit-publication .unit-body.open {
+            display: block;
+        }
+        .unit-publication .unit-body .data-table {
+            font-size: 12px;
+        }
+        .unit-publication .unit-body .data-table th {
+            background: #2a5298;
+        }
+        .unit-publication .unit-body .data-table td {
+            padding: 6px 10px;
+        }
+        .unit-publication .unit-body .data-table .total-row td {
+            background: #e8ecf1;
+            font-weight: 700;
+        }
+        .pub-collapse-icon {
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .pub-collapse-icon.open {
+            transform: rotate(90deg);
+        }
+
+        /* LOADING & NO DATA */
+        .loading-spinner {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        .loading-spinner i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+            color: #2a5298;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        .no-data i {
+            font-size: 36px;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* TOAST */
+        .custom-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+        .custom-toast.success { background: #28a745; }
+        .custom-toast.error { background: #dc3545; }
+        .custom-toast.info { background: #17a2b8; }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .header-row1 { flex-direction: column; align-items: center; }
+            .tabs-section { justify-content: center; }
+            .tab-btn { padding: 8px 12px; font-size: 12px; }
+            .section-header { flex-direction: column; align-items: stretch; }
+            .section-header .totals-box { justify-content: center; flex-wrap: wrap; }
+            .data-table { font-size: 11px; }
+            .data-table th, .data-table td { padding: 5px 8px; }
+            .table-responsive-wrapper { max-height: 400px; }
+            #loginOverlay .login-box { padding: 30px 25px; margin: 15px; }
+        }
+        @media (max-width: 480px) {
+            .data-table .editable-input { min-width: 60px; }
+            .data-table .editable-input.text-input { min-width: 80px; }
+            .tab-btn { padding: 6px 10px; font-size: 11px; }
+            .section-header h3 { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <div class="logo">
+            <img src="https://lh3.googleusercontent.com/d/1uLdST5g0rbVFpAV_i7qJXAI1nZJo20lQ" alt="LOKMAT">
+            <h3>ICD Central Dashboard</h3>
+            <p class="sub">Task · Execution · Delivery — Unified Dashboard</p>
+        </div>
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>Password (Last 4 digits of Mobile)</label>
+            <input type="password" id="loginPassword" placeholder="Enter last 4 digits" maxlength="4" autocomplete="current-password">
+        </div>
+        <button class="login-btn" id="loginBtn" onclick="handleLogin()">
+            <i class="fa fa-sign-in"></i> Sign In
+        </button>
+        <div class="login-error" id="loginError">Invalid email or password. Please try again.</div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container-fluid" id="mainContent" style="display:none;">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-row1">
+            <div class="header-left">
+                <img src="https://lh3.googleusercontent.com/d/1uLdST5g0rbVFpAV_i7qJXAI1nZJo20lQ" 
+                     alt="LOKMAT" class="header-logo"
+                     onerror="this.style.display='none'">
+            </div>
+            <div class="header-user">
+                <div>
+                    <div class="user-name" id="headerUserName">User</div>
+                    <div class="user-role" id="headerUserRole">Role</div>
+                </div>
+                <button class="logout-header-btn" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-section" id="tabsContainer">
+        <!-- Dynamically generated -->
+    </div>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content" id="tabContent">
+        <!-- Dynamically loaded -->
+    </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION - REPLACE WITH YOUR DEPLOYED URL
+// ============================================================
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwic5HzVm6WgmvkdRJjVaiBBoPU0DMNprHhk-ctwUNlj1ZQxdUqOUk5F13IGrmHqLrwbA/exec';
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+let loggedInUser = null;
+let allData = {};
+let currentTab = '';
+let publicationChanges = {};
+let isSaving = false;
+
+// ============================================================
+// LOGIN SYSTEM
+// ============================================================
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    const errorEl = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    errorEl.classList.remove('show');
+    
+    if (!email || !password) {
+        errorEl.textContent = 'Please enter both email and password.';
+        errorEl.classList.add('show');
+        return;
+    }
+    
+    // Password must be exactly 4 digits
+    if (!/^\d{4}$/.test(password)) {
+        errorEl.textContent = 'Password must be exactly 4 digits (last 4 digits of mobile).';
+        errorEl.classList.add('show');
+        return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Authenticating...';
+    
+    try {
+        const result = await callAPI('authenticateUser', { 
+            email: email, 
+            password: password 
+        });
+        
+        if (result.success && result.user) {
+            loggedInUser = result.user;
+            
+            // Parse units if comma separated
+            if (loggedInUser.units && typeof loggedInUser.units === 'string') {
+                loggedInUser.units = loggedInUser.units.split(',').map(u => u.trim()).filter(u => u);
+            }
+            if (!loggedInUser.units || loggedInUser.units.length === 0) {
+                loggedInUser.units = [loggedInUser.unit || ''];
+            }
+            
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('headerUserName').textContent = loggedInUser.name;
+            document.getElementById('headerUserRole').textContent = loggedInUser.role + 
+                (loggedInUser.role === 'ICD Head' ? ' - ' + loggedInUser.units.join(', ') : '');
+            
+            await loadAllData();
+        } else {
+            errorEl.textContent = result.message || 'Invalid email or password.';
+            errorEl.classList.add('show');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fa fa-sign-in"></i> Sign In';
+        }
+    } catch(err) {
+        errorEl.textContent = 'Error connecting to server. Please try again.';
+        errorEl.classList.add('show');
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fa fa-sign-in"></i> Sign In';
+        console.error('Login error:', err);
+    }
+}
+
+function logout() {
+    loggedInUser = null;
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.remove('show');
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').innerHTML = '<i class="fa fa-sign-in"></i> Sign In';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') handleLogin();
+    });
+    document.getElementById('loginEmail').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+    });
+});
+
+// ============================================================
+// API CALL
+// ============================================================
+function callAPI(action, params) {
+    return new Promise((resolve, reject) => {
+        let url = API_BASE_URL + '?action=' + encodeURIComponent(action);
+        if (params) {
+            url += '&params=' + encodeURIComponent(JSON.stringify(params));
+        }
+        
+        const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            resolve(data);
+        };
+        
+        const script = document.createElement('script');
+        script.src = url + '&callback=' + callbackName;
+        script.onerror = function() {
+            delete window[callbackName];
+            fetch(url)
+                .then(response => response.json())
+                .then(data => resolve(data))
+                .catch(err => reject(err));
+        };
+        document.body.appendChild(script);
+        
+        setTimeout(() => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+                reject(new Error('Request timeout'));
+            }
+        }, 15000);
+    });
+}
+
+// ============================================================
+// LOAD ALL DATA
+// ============================================================
+async function loadAllData() {
+    try {
+        const isAdmin = loggedInUser.role === 'Admin';
+        
+        // Always load workload, skills, models
+        const actions = ['getWorkload', 'getSkills', 'getModels'];
+        const results = await Promise.all(actions.map(action => callAPI(action)));
+        allData.workload = results[0].success ? results[0].data : [];
+        allData.skills = results[1].success ? results[1].data : [];
+        allData.models = results[2].success ? results[2].data : {};
+        
+        // Load publication data
+        if (isAdmin) {
+            // Admin: Get all units from the publication sheet
+            const pubResult = await callAPI('getAllPublication');
+            allData.publication = pubResult.success ? pubResult.data : {};
+        } else {
+            // ICD Head: Get only their units
+            const pubResult = await callAPI('getPublication', { units: loggedInUser.units });
+            allData.publication = pubResult.success ? pubResult.data : {};
+        }
+        
+        renderTabs();
+        renderTabContent(currentTab || getDefaultTab());
+        
+    } catch(error) {
+        console.error('Error loading data:', error);
+        showToast('Error loading data: ' + error.message, 'error');
+    }
+}
+
+function getDefaultTab() {
+    if (loggedInUser.role === 'Admin') {
+        return 'workload';
+    } else {
+        return loggedInUser.units && loggedInUser.units.length > 0 ? loggedInUser.units[0] : '';
+    }
+}
+
+// ============================================================
+// RENDER TABS
+// ============================================================
+function renderTabs() {
+    const container = document.getElementById('tabsContainer');
+    let html = '';
+    
+    if (loggedInUser.role === 'Admin') {
+        const tabs = [
+            { id: 'workload', label: '📊 Workload' },
+            { id: 'skills', label: '📋 Skills' },
+            { id: 'model-a', label: '📈 Model-A' },
+            { id: 'model-b', label: '📈 Model-B' },
+            { id: 'model-c', label: '📈 Model-C' },
+            { id: 'publications', label: '📰 Publications' }
+        ];
+        tabs.forEach(tab => {
+            const active = tab.id === currentTab || (!currentTab && tab.id === 'workload') ? 'active' : '';
+            html += `<button class="tab-btn ${active}" data-tab="${tab.id}" onclick="switchTab('${tab.id}')">${tab.label}</button>`;
+        });
+    } else if (loggedInUser.role === 'ICD Head') {
+        const units = loggedInUser.units || [];
+        units.forEach((unit, index) => {
+            const active = (unit === currentTab || (!currentTab && index === 0)) ? 'active' : '';
+            html += `<button class="tab-btn ${active}" data-tab="${unit}" onclick="switchTab('${unit}')">📰 ${unit}</button>`;
+        });
+    }
+    
+    container.innerHTML = html;
+}
+
+function switchTab(tabId) {
+    currentTab = tabId;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+    renderTabContent(tabId);
+}
+
+// ============================================================
+// RENDER TAB CONTENT
+// ============================================================
+function renderTabContent(tabId) {
+    const container = document.getElementById('tabContent');
+    
+    if (loggedInUser.role === 'Admin') {
+        switch(tabId) {
+            case 'workload':
+                renderWorkload(container);
+                break;
+            case 'skills':
+                renderSkills(container);
+                break;
+            case 'model-a':
+                renderModel(container, 'A', 'Manual Pagination by ICD (Existing Model)');
+                break;
+            case 'model-b':
+                renderModel(container, 'B', 'Automated Pagination by ICD');
+                break;
+            case 'model-c':
+                renderModel(container, 'C', 'Automated Pagination by Editorial');
+                break;
+            case 'publications':
+                renderPublications(container);
+                break;
+            default:
+                container.innerHTML = '<div class="no-data"><i class="fa fa-file"></i>Select a tab</div>';
+        }
+    } else if (loggedInUser.role === 'ICD Head') {
+        renderPublication(container, tabId);
+    }
+}
+
+// ============================================================
+// RENDER WORKLOAD (Admin)
+// ============================================================
+function renderWorkload(container) {
+    const data = allData.workload || [];
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fa fa-database"></i>No workload data available</div>';
+        return;
+    }
+    
+    const headers = Object.keys(data[0] || {});
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-tasks"></i> Workload by Unit</h3>
+            <span style="font-size:13px;color:#888;">Total Units: ${data.length}</span>
+        </div>
+        <div class="table-responsive-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(h => {
+            const val = row[h] !== undefined && row[h] !== null ? row[h] : '';
+            html += `<td>${escapeHtml(String(val))}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ============================================================
+// RENDER SKILLS (Admin)
+// ============================================================
+function renderSkills(container) {
+    const data = allData.skills || [];
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fa fa-database"></i>No skills data available</div>';
+        return;
+    }
+    
+    const headers = ['Unit', 'Total', 'Normal Page Designer', 'Creative Page Designer', 
+                     'Event/Advt Designer', 'Versatile', 'Notice/Display Ad', 'Photo Editor', 'PDF Maker'];
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-tags"></i> Skills Distribution</h3>
+            <span style="font-size:13px;color:#888;">Total Units: ${data.length}</span>
+        </div>
+        <div class="table-responsive-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(row => {
+        html += '<tr>';
+        html += `<td>${escapeHtml(row.Unit || '')}</td>`;
+        html += `<td>${row.Total || 0}</td>`;
+        html += `<td>${row.Normal_Page_Designer || 0}</td>`;
+        html += `<td>${row.Creative_Page_Designer || 0}</td>`;
+        html += `<td>${row.Event_Advt_Designer || 0}</td>`;
+        html += `<td>${row.Versatile || 0}</td>`;
+        html += `<td>${row.Notice_Display_Ad || 0}</td>`;
+        html += `<td>${row.Photo_Editor || 0}</td>`;
+        html += `<td>${row.PDF_Maker || 0}</td>`;
+        html += '</tr>';
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ============================================================
+// RENDER MODEL (Admin)
+// ============================================================
+function renderModel(container, modelType, title) {
+    const models = allData.models || {};
+    const data = models[modelType] || [];
+    
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fa fa-database"></i>No model data available</div>';
+        return;
+    }
+    
+    const headers = Object.keys(data[0] || {});
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-cubes"></i> ${escapeHtml(title)}</h3>
+            <span style="font-size:13px;color:#888;">Total Units: ${data.length}</span>
+        </div>
+        <div class="table-responsive-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        ${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.forEach(row => {
+        html += '<tr>';
+        headers.forEach(h => {
+            const val = row[h] !== undefined && row[h] !== null ? row[h] : '';
+            html += `<td>${val}</td>`;
+        });
+        html += '</tr>';
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ============================================================
+// RENDER PUBLICATIONS (Admin - All Units)
+// ============================================================
+function renderPublications(container) {
+    const data = allData.publication || {};
+    const units = Object.keys(data);
+    
+    if (!units || units.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fa fa-newspaper-o"></i>No publication data available</div>';
+        return;
+    }
+    
+    // Calculate grand totals across all units
+    let grandTotalPages = 0, grandTotalFresh = 0, grandTotalAlter = 0;
+    units.forEach(unit => {
+        const unitData = data[unit] || [];
+        unitData.forEach(row => {
+            grandTotalPages += row.Total_Pages || 0;
+            grandTotalFresh += row.Fresh_Pagination || 0;
+            grandTotalAlter += row.Alter_Pagination || 0;
+        });
+    });
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-newspaper-o"></i> All Publications by Unit</h3>
+            <div class="totals-box">
+                <span>📄 Total Pages: <span class="num">${grandTotalPages}</span></span>
+                <span>🆕 Fresh: <span class="num">${grandTotalFresh}</span></span>
+                <span>🔄 Alter: <span class="num">${grandTotalAlter}</span></span>
+            </div>
+        </div>
+    `;
+    
+    units.sort().forEach(unit => {
+        const unitData = data[unit] || [];
+        if (unitData.length === 0) return;
+        
+        let totalPages = 0, totalFresh = 0, totalAlter = 0;
+        unitData.forEach(row => {
+            totalPages += row.Total_Pages || 0;
+            totalFresh += row.Fresh_Pagination || 0;
+            totalAlter += row.Alter_Pagination || 0;
+        });
+        
+        const unitId = 'pub_unit_' + unit.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        html += `
+            <div class="unit-publication">
+                <div class="unit-header" onclick="togglePublication('${unitId}')">
+                    <span>
+                        <i class="fa fa-chevron-right pub-collapse-icon" id="${unitId}_icon"></i>
+                        ${escapeHtml(unit)}
+                    </span>
+                    <div class="unit-totals">
+                        <span>📄 Total: <span class="num">${totalPages}</span></span>
+                        <span>🆕 Fresh: <span class="num">${totalFresh}</span></span>
+                        <span>🔄 Alter: <span class="num">${totalAlter}</span></span>
+                    </div>
+                </div>
+                <div class="unit-body" id="${unitId}">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Edition</th>
+                                <th>Editorial Content Ready</th>
+                                <th>Page Design & PDF Slot</th>
+                                <th>Total Pages</th>
+                                <th>Fresh</th>
+                                <th>Alter</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        unitData.forEach(row => {
+            html += `
+                <tr>
+                    <td><strong>${escapeHtml(row.Edition || '')}</strong></td>
+                    <td>${escapeHtml(row.Editorial_Content_Ready || '')}</td>
+                    <td>${escapeHtml(row.Page_Design_PDF_Slot || '')}</td>
+                    <td>${row.Total_Pages || 0}</td>
+                    <td>${row.Fresh_Pagination || 0}</td>
+                    <td>${row.Alter_Pagination || 0}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <th>TOTAL</th>
+                                <td></td>
+                                <td></td>
+                                <td>${totalPages}</td>
+                                <td>${totalFresh}</td>
+                                <td>${totalAlter}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function togglePublication(unitId) {
+    const body = document.getElementById(unitId);
+    const icon = document.getElementById(unitId + '_icon');
+    if (body) {
+        body.classList.toggle('open');
+        if (icon) {
+            icon.classList.toggle('open');
+        }
+    }
+}
+
+// ============================================================
+// RENDER PUBLICATION (ICD Head - Single Unit)
+// ============================================================
+function renderPublication(container, unit) {
+    const data = allData.publication || {};
+    const unitData = data[unit] || [];
+    
+    if (!unitData || unitData.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fa fa-newspaper-o"></i>
+                No publication data available for ${escapeHtml(unit)}
+            </div>
+        `;
+        return;
+    }
+    
+    let totalPages = 0, totalFresh = 0, totalAlter = 0;
+    unitData.forEach(row => {
+        totalPages += row.Total_Pages || 0;
+        totalFresh += row.Fresh_Pagination || 0;
+        totalAlter += row.Alter_Pagination || 0;
+    });
+    
+    if (!publicationChanges[unit]) {
+        publicationChanges[unit] = {};
+    }
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-newspaper-o"></i> Publication: ${escapeHtml(unit)}</h3>
+            <div class="totals-box">
+                <span>📄 Total Pages: <span class="num">${totalPages}</span></span>
+                <span>🆕 Fresh: <span class="num">${totalFresh}</span></span>
+                <span>🔄 Alter: <span class="num">${totalAlter}</span></span>
+            </div>
+        </div>
+        <div class="table-responsive-wrapper">
+            <table class="data-table" id="pubTable_${escapeHtml(unit)}">
+                <thead>
+                    <tr>
+                        <th>Edition</th>
+                        <th>Editorial Content Ready</th>
+                        <th>Page Design & PDF Slot</th>
+                        <th>Total Pages</th>
+                        <th>Fresh</th>
+                        <th>Alter</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    unitData.forEach((row, index) => {
+        const rowId = 'row_' + index;
+        const editorialVal = row.Editorial_Content_Ready || '';
+        const designSlotVal = row.Page_Design_PDF_Slot || '';
+        
+        const changes = publicationChanges[unit] || {};
+        const rowChanges = changes[rowId] || {};
+        const editorialChanged = rowChanges.editorial !== undefined && rowChanges.editorial !== editorialVal;
+        const slotChanged = rowChanges.slot !== undefined && rowChanges.slot !== designSlotVal;
+        
+        html += `
+            <tr id="${rowId}">
+                <td><strong>${escapeHtml(row.Edition || '')}</strong></td>
+                <td>
+                    <input type="text" class="editable-input text-input ${editorialChanged ? 'changed' : ''}" 
+                           value="${escapeHtml(editorialVal)}" 
+                           data-unit="${escapeHtml(unit)}" 
+                           data-row="${rowId}" 
+                           data-field="editorial"
+                           onchange="onPublicationChange('${escapeHtml(unit)}', '${rowId}', 'editorial', this.value)"
+                           placeholder="Editorial Content Ready">
+                </td>
+                <td>
+                    <input type="text" class="editable-input text-input ${slotChanged ? 'changed' : ''}" 
+                           value="${escapeHtml(designSlotVal)}" 
+                           data-unit="${escapeHtml(unit)}" 
+                           data-row="${rowId}" 
+                           data-field="slot"
+                           onchange="onPublicationChange('${escapeHtml(unit)}', '${rowId}', 'slot', this.value)"
+                           placeholder="Page Design & PDF Slot">
+                </td>
+                <td>${row.Total_Pages || 0}</td>
+                <td>${row.Fresh_Pagination || 0}</td>
+                <td>${row.Alter_Pagination || 0}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <th>TOTAL</th>
+                        <td></td>
+                        <td></td>
+                        <td>${totalPages}</td>
+                        <td>${totalFresh}</td>
+                        <td>${totalAlter}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="save-area">
+            <button class="save-btn" id="savePubBtn_${escapeHtml(unit)}" onclick="savePublication('${escapeHtml(unit)}')">
+                <i class="fa fa-save"></i> Save All Changes
+            </button>
+            <span class="save-status" id="pubStatus_${escapeHtml(unit)}"></span>
+            <span style="font-size:12px;color:#888;margin-left:auto;" id="changeCount_${escapeHtml(unit)}">No changes</span>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    updateChangeStatus(unit);
+}
+
+function onPublicationChange(unit, rowId, field, value) {
+    if (!publicationChanges[unit]) {
+        publicationChanges[unit] = {};
+    }
+    if (!publicationChanges[unit][rowId]) {
+        publicationChanges[unit][rowId] = {};
+    }
+    publicationChanges[unit][rowId][field] = value;
+    publicationChanges[unit][rowId]['changed'] = true;
+    
+    const input = document.querySelector(`[data-unit="${unit}"][data-row="${rowId}"][data-field="${field}"]`);
+    if (input) {
+        input.classList.add('changed');
+    }
+    
+    updateChangeStatus(unit);
+}
+
+function updateChangeStatus(unit) {
+    const changes = publicationChanges[unit] || {};
+    let count = 0;
+    for (let rowId in changes) {
+        if (changes[rowId].changed) count++;
+    }
+    
+    const statusEl = document.getElementById('changeCount_' + unit);
+    if (statusEl) {
+        statusEl.textContent = count > 0 ? `${count} row(s) changed` : 'No changes';
+        statusEl.style.color = count > 0 ? '#ff9800' : '#888';
+    }
+    
+    const saveBtn = document.getElementById('savePubBtn_' + unit);
+    if (saveBtn) {
+        saveBtn.disabled = count === 0;
+        saveBtn.classList.toggle('saved', count === 0);
+    }
+}
+
+async function savePublication(unit) {
+    const changes = publicationChanges[unit] || {};
+    const hasChanges = Object.keys(changes).some(key => changes[key].changed);
+    
+    if (!hasChanges) {
+        showToast('No changes to save', 'info');
+        return;
+    }
+    
+    if (isSaving) return;
+    isSaving = true;
+    
+    const saveBtn = document.getElementById('savePubBtn_' + unit);
+    const statusEl = document.getElementById('pubStatus_' + unit);
+    
+    saveBtn.disabled = true;
+    statusEl.className = 'save-status show saving';
+    statusEl.textContent = '⏳ Saving...';
+    
+    const rowsToSave = [];
+    for (let rowId in changes) {
+        if (changes[rowId].changed) {
+            const table = document.getElementById('pubTable_' + unit);
+            const row = table.querySelector('#' + rowId);
+            if (row) {
+                const edition = row.querySelector('td:first-child strong')?.textContent || '';
+                rowsToSave.push({
+                    edition: edition,
+                    editorial: changes[rowId].editorial || '',
+                    slot: changes[rowId].slot || ''
+                });
+            }
+        }
+    }
+    
+    try {
+        const result = await callAPI('savePublication', {
+            unit: unit,
+            rows: rowsToSave
+        });
+        
+        if (result.success) {
+            publicationChanges[unit] = {};
+            updateChangeStatus(unit);
+            
+            document.querySelectorAll(`[data-unit="${unit}"]`).forEach(input => {
+                input.classList.remove('changed');
+            });
+            
+            statusEl.className = 'save-status show saved';
+            statusEl.textContent = '✓ Saved successfully';
+            showToast('Publication data saved successfully!', 'success');
+            
+            setTimeout(() => {
+                statusEl.className = 'save-status';
+            }, 3000);
+        } else {
+            statusEl.className = 'save-status show error';
+            statusEl.textContent = '✗ Error: ' + (result.error || 'Unknown error');
+            showToast('Error saving: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch(error) {
+        statusEl.className = 'save-status show error';
+        statusEl.textContent = '✗ Error: ' + error.message;
+        showToast('Error saving: ' + error.message, 'error');
+    }
+    
+    isSaving = false;
+    saveBtn.disabled = false;
+}
+
+function showToast(message, type) {
+    const existing = document.querySelector('.custom-toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast ' + (type || 'info');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
