@@ -274,6 +274,14 @@
             border-color: #ff9800;
             background: #fff8e1;
         }
+        .data-table .text-red {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .data-table .text-cnf {
+            color: #dc3545;
+            font-weight: 600;
+        }
 
         .table-responsive-wrapper {
             max-height: 600px;
@@ -311,6 +319,22 @@
         .section-header .totals-box .num {
             color: #1a3a6b;
             font-size: 16px;
+        }
+        .section-header .summary-totals {
+            font-size: 12px;
+            color: #555;
+            background: #f0f2f5;
+            padding: 4px 14px;
+            border-radius: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+        }
+        .section-header .summary-totals span {
+            white-space: nowrap;
+        }
+        .section-header .summary-totals strong {
+            color: #1a3a6b;
         }
 
         .save-area {
@@ -420,6 +444,64 @@
             transform: rotate(90deg);
         }
 
+        /* EMPLOYEE UNITS - Collapsible */
+        .unit-employee {
+            margin-bottom: 24px;
+            border: 1px solid #e8ecf1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .unit-employee .unit-header {
+            background: #f0f2f5;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #1a3a6b;
+            transition: background 0.2s;
+        }
+        .unit-employee .unit-header:hover {
+            background: #e8ecf1;
+        }
+        .unit-employee .unit-header .unit-totals {
+            font-weight: 400;
+            font-size: 13px;
+            color: #555;
+        }
+        .unit-employee .unit-header .unit-totals span {
+            margin-left: 12px;
+        }
+        .unit-employee .unit-header .unit-totals .num {
+            font-weight: 700;
+            color: #1a3a6b;
+        }
+        .unit-employee .unit-body {
+            padding: 0 16px 16px;
+            display: none;
+        }
+        .unit-employee .unit-body.open {
+            display: block;
+        }
+        .unit-employee .unit-body .data-table {
+            font-size: 12px;
+        }
+        .unit-employee .unit-body .data-table th {
+            background: #2a5298;
+        }
+        .unit-employee .unit-body .data-table td {
+            padding: 6px 10px;
+        }
+        .unit-employee .unit-body .data-table .total-row td {
+            background: #e8ecf1;
+            font-weight: 700;
+        }
+        .unit-employee .unit-body .data-table .text-cnf {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
         /* LOADING & NO DATA */
         .loading-spinner {
             text-align: center;
@@ -474,6 +556,7 @@
             .tab-btn { padding: 8px 12px; font-size: 12px; }
             .section-header { flex-direction: column; align-items: stretch; }
             .section-header .totals-box { justify-content: center; flex-wrap: wrap; }
+            .section-header .summary-totals { justify-content: center; }
             .data-table { font-size: 11px; }
             .data-table th, .data-table td { padding: 5px 8px; }
             .table-responsive-wrapper { max-height: 400px; }
@@ -484,7 +567,30 @@
             .data-table .editable-input.text-input { min-width: 80px; }
             .tab-btn { padding: 6px 10px; font-size: 11px; }
             .section-header h3 { font-size: 15px; }
+            .section-header .summary-totals { font-size: 11px; gap: 2px 8px; }
         }
+		
+		/* EMPLOYEE TABLE - 3 Column Layout */
+		.employee-table th {
+			text-align: center;
+			font-size: 13px;
+			padding: 10px 12px;
+		}
+		.employee-table td {
+			text-align: center;
+			padding: 6px 10px;
+			vertical-align: middle;
+		}
+		.employee-table .text-cnf {
+			color: #dc3545;
+			font-weight: 600;
+		}
+		.unit-employee .unit-body .data-table td:first-child {
+			border-right: 1px solid #e8ecf1;
+		}
+		.unit-employee .unit-body .data-table td:last-child {
+			border-left: 1px solid #e8ecf1;
+		}
     </style>
 </head>
 <body>
@@ -549,7 +655,7 @@
 // ============================================================
 // CONFIGURATION - REPLACE WITH YOUR DEPLOYED URL
 // ============================================================
-const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbwic5HzVm6WgmvkdRJjVaiBBoPU0DMNprHhk-ctwUNlj1ZQxdUqOUk5F13IGrmHqLrwbA/exec';
+const API_BASE_URL = 'https://script.google.com/macros/s/AKfycbyTSI2Sd5P93RDCVGDs_kkRRZ-V-YG57dofGGW6fKwudzsoHUdc4UhWuBTD_PHCq4Ft/exec';
 
 // ============================================================
 // GLOBAL STATE
@@ -701,6 +807,10 @@ async function loadAllData() {
             // Admin: Get all units from the publication sheet
             const pubResult = await callAPI('getAllPublication');
             allData.publication = pubResult.success ? pubResult.data : {};
+            
+            // Admin: Get all employees
+            const empResult = await callAPI('getEmployees');
+            allData.employees = empResult.success ? empResult.data : {};
         } else {
             // ICD Head: Get only their units
             const pubResult = await callAPI('getPublication', { units: loggedInUser.units });
@@ -738,7 +848,8 @@ function renderTabs() {
             { id: 'model-a', label: '📈 Model-A' },
             { id: 'model-b', label: '📈 Model-B' },
             { id: 'model-c', label: '📈 Model-C' },
-            { id: 'publications', label: '📰 Publications' }
+            { id: 'publications', label: '📰 Publications' },
+            { id: 'employees', label: '👥 Employees' }
         ];
         tabs.forEach(tab => {
             const active = tab.id === currentTab || (!currentTab && tab.id === 'workload') ? 'active' : '';
@@ -788,6 +899,9 @@ function renderTabContent(tabId) {
                 break;
             case 'publications':
                 renderPublications(container);
+                break;
+            case 'employees':
+                renderEmployees(container);
                 break;
             default:
                 container.innerHTML = '<div class="no-data"><i class="fa fa-file"></i>Select a tab</div>';
@@ -844,7 +958,7 @@ function renderWorkload(container) {
 }
 
 // ============================================================
-// RENDER SKILLS (Admin)
+// RENDER SKILLS (Admin) - UPDATED with totals
 // ============================================================
 function renderSkills(container) {
     const data = allData.skills || [];
@@ -854,13 +968,35 @@ function renderSkills(container) {
         return;
     }
     
-    const headers = ['Unit', 'Total', 'Normal Page Designer', 'Creative Page Designer', 
-                     'Event/Advt Designer', 'Versatile', 'Notice/Display Ad', 'Photo Editor', 'PDF Maker'];
+    // Calculate totals across all units
+    let totalNews = 0, totalCreative = 0, totalEventAdvt = 0, totalExperts = 0;
+    let totalNotice = 0, totalPhoto = 0, totalPDF = 0;
+    
+    data.forEach(row => {
+        totalNews += row.Normal_Page_Designer || 0;
+        totalCreative += row.Creative_Page_Designer || 0;
+        totalEventAdvt += row.Event_Advt_Designer || 0;
+        totalExperts += row.Versatile || 0;
+        totalNotice += row.Notice_Display_Ad || 0;
+        totalPhoto += row.Photo_Editor || 0;
+        totalPDF += row.PDF_Maker || 0;
+    });
+    
+    const headers = ['Unit', 'Total', 'News Pages', 'Creative Pages', 
+                     'Event/Advt', 'Experts', 'Notice/Display Ad', 'Photo Editor', 'PDF Maker'];
     
     let html = `
         <div class="section-header">
             <h3><i class="fa fa-tags"></i> Skills Distribution</h3>
-            <span style="font-size:13px;color:#888;">Total Units: ${data.length}</span>
+            <div class="summary-totals">
+                <span>📰 News Pages: <strong>${totalNews}</strong></span>
+                <span>🎨 Creative Pages: <strong>${totalCreative}</strong></span>
+                <span>🎪 Event/Advt: <strong>${totalEventAdvt}</strong></span>
+                <span>⭐ Experts: <strong>${totalExperts}</strong></span>
+                <span>📋 Notice/Display Ad: <strong>${totalNotice}</strong></span>
+                <span>📷 Photo Editor: <strong>${totalPhoto}</strong></span>
+                <span>📄 PDF Maker: <strong>${totalPDF}</strong></span>
+            </div>
         </div>
         <div class="table-responsive-wrapper">
             <table class="data-table">
@@ -896,7 +1032,7 @@ function renderSkills(container) {
 }
 
 // ============================================================
-// RENDER MODEL (Admin)
+// RENDER MODEL (Admin) - UPDATED with totals
 // ============================================================
 function renderModel(container, modelType, title) {
     const models = allData.models || {};
@@ -907,12 +1043,29 @@ function renderModel(container, modelType, title) {
         return;
     }
     
+    // Calculate totals across all units
+    let totalPD = 0, totalADVT = 0, totalReliever = 0, totalEvent = 0, totalOther = 0;
+    
+    data.forEach(row => {
+        totalPD += row['Page Designer'] || 0;
+        totalADVT += row['ADVT'] || 0;
+        totalReliever += row['Reliever'] || 0;
+        totalEvent += row['Event'] || 0;
+        totalOther += row['Other'] || 0;
+    });
+    
     const headers = Object.keys(data[0] || {});
     
     let html = `
         <div class="section-header">
             <h3><i class="fa fa-cubes"></i> ${escapeHtml(title)}</h3>
-            <span style="font-size:13px;color:#888;">Total Units: ${data.length}</span>
+            <div class="summary-totals">
+                <span>📐 Page Designer: <strong>${totalPD}</strong></span>
+                <span>📢 ADVT: <strong>${totalADVT}</strong></span>
+                <span>🔄 Reliever: <strong>${totalReliever}</strong></span>
+                <span>🎪 Event: <strong>${totalEvent}</strong></span>
+                <span>📋 Other: <strong>${totalOther}</strong></span>
+            </div>
         </div>
         <div class="table-responsive-wrapper">
             <table class="data-table">
@@ -1052,6 +1205,151 @@ function renderPublications(container) {
 }
 
 function togglePublication(unitId) {
+    const body = document.getElementById(unitId);
+    const icon = document.getElementById(unitId + '_icon');
+    if (body) {
+        body.classList.toggle('open');
+        if (icon) {
+            icon.classList.toggle('open');
+        }
+    }
+}
+
+// ============================================================
+// RENDER EMPLOYEES (Admin - All Units)
+// ============================================================
+function renderEmployees(container) {
+    const data = allData.employees || {};
+    const units = Object.keys(data);
+    
+    if (!units || units.length === 0) {
+        container.innerHTML = '<div class="no-data"><i class="fa fa-users"></i>No employee data available</div>';
+        return;
+    }
+    
+    // Calculate grand totals
+    let grandExisting = 0, grandProposed = 0, grandEliminated = 0;
+    units.forEach(unit => {
+        const unitData = data[unit] || [];
+        unitData.forEach(emp => {
+            grandExisting++;
+            if (emp.Continue && emp.Continue.toLowerCase() === 'yes') {
+                grandProposed++;
+            } else if (emp.Continue && emp.Continue.toLowerCase() === 'no') {
+                grandEliminated++;
+            }
+        });
+    });
+    
+    let html = `
+        <div class="section-header">
+            <h3><i class="fa fa-users"></i> Employees by Unit</h3>
+            <div class="totals-box">
+                <span>👥 Existing: <span class="num">${grandExisting}</span></span>
+                <span>✅ Proposed: <span class="num">${grandProposed}</span></span>
+                <span>❌ Eliminated: <span class="num">${grandEliminated}</span></span>
+            </div>
+        </div>
+    `;
+    
+    units.sort().forEach(unit => {
+        const unitData = data[unit] || [];
+        if (unitData.length === 0) return;
+        
+        // Separate employees by Continue status
+        const existing = [];
+        const proposed = [];
+        const eliminated = [];
+        
+        unitData.forEach(emp => {
+            existing.push(emp);
+            if (emp.Continue && emp.Continue.toLowerCase() === 'yes') {
+                proposed.push(emp);
+            } else if (emp.Continue && emp.Continue.toLowerCase() === 'no') {
+                eliminated.push(emp);
+            }
+        });
+        
+        // Sort names alphabetically in each column
+        const sortByName = (arr) => arr.sort((a, b) => (a.Name || '').localeCompare(b.Name || ''));
+        sortByName(existing);
+        sortByName(proposed);
+        sortByName(eliminated);
+        
+        // Determine max rows needed
+        const maxRows = Math.max(existing.length, proposed.length, eliminated.length);
+        
+        const unitId = 'emp_unit_' + unit.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        html += `
+            <div class="unit-employee">
+                <div class="unit-header" onclick="toggleEmployeeUnit('${unitId}')">
+                    <span>
+                        <i class="fa fa-chevron-right pub-collapse-icon" id="${unitId}_icon"></i>
+                        ${escapeHtml(unit)}
+                    </span>
+                    <div class="unit-totals">
+                        <span>👥 Existing: <span class="num">${existing.length}</span></span>
+                        <span>✅ Proposed: <span class="num">${proposed.length}</span></span>
+                        <span>❌ Eliminated: <span class="num">${eliminated.length}</span></span>
+                    </div>
+                </div>
+                <div class="unit-body" id="${unitId}">
+                    <table class="data-table employee-table">
+                        <thead>
+                            <tr>
+                                <th style="width:33.33%;background:#28a745;color:white;">Existing</th>
+                                <th style="width:33.33%;background:#17a2b8;color:white;">Proposed</th>
+                                <th style="width:33.33%;background:#dc3545;color:white;">Eliminated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        for (let i = 0; i < maxRows; i++) {
+            const empExisting = existing[i] || null;
+            const empProposed = proposed[i] || null;
+            const empEliminated = eliminated[i] || null;
+            
+            const getNameWithColor = (emp) => {
+                if (!emp) return '';
+                const isCNF = emp.Type && emp.Type.toUpperCase() === 'CNF';
+                const name = escapeHtml(emp.Name || '');
+                return isCNF ? `<span class="text-cnf">${name}</span>` : name;
+            };
+            
+            html += `
+                <tr>
+                    <td>${getNameWithColor(empExisting)}</td>
+                    <td>${getNameWithColor(empProposed)}</td>
+                    <td>${getNameWithColor(empEliminated)}</td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function toggleEmployeeUnit(unitId) {
+    const body = document.getElementById(unitId);
+    const icon = document.getElementById(unitId + '_icon');
+    if (body) {
+        body.classList.toggle('open');
+        if (icon) {
+            icon.classList.toggle('open');
+        }
+    }
+}
+
+function toggleEmployeeUnit(unitId) {
     const body = document.getElementById(unitId);
     const icon = document.getElementById(unitId + '_icon');
     if (body) {
