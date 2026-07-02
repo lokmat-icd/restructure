@@ -889,7 +889,7 @@ function renderTabContent(tabId) {
                 renderSkills(container);
                 break;
             case 'model-a':
-                renderModel(container, 'A', 'Manual Pagination by ICD (Existing Model)');
+                renderModel(container, 'A', 'Centralised Pagination by ICD (Existing Process)');
                 break;
             case 'model-b':
                 renderModel(container, 'B', 'Automated Pagination by ICD');
@@ -1048,6 +1048,7 @@ function renderModel(container, modelType, title) {
         return;
     }
     
+    // Calculate totals across all units
     let totalPD = 0, totalADVT = 0, totalReliever = 0, totalEvent = 0, totalOther = 0;
     
     data.forEach(row => {
@@ -1058,11 +1059,14 @@ function renderModel(container, modelType, title) {
         totalOther += row['Other'] || 0;
     });
     
+    // Calculate grand total (sum of ALL columns: PD + ADVT + Reliever + Event + Other)
+    const grandTotal = totalPD + totalADVT + totalReliever + totalEvent + totalOther;
+    
     const headers = Object.keys(data[0] || {});
     
     let html = `
         <div class="section-header">
-            <h3><i class="fa fa-cubes"></i> ${escapeHtml(title)}</h3>
+            <h3><i class="fa fa-cubes"></i> ${escapeHtml(title)} - <span style="color:#1a3a6b;font-weight:700;">${grandTotal}</span></h3>
             <div class="summary-totals">
                 <span>📐 Page Designer: <strong>${totalPD}</strong></span>
                 <span>📢 ADVT: <strong>${totalADVT}</strong></span>
@@ -1244,6 +1248,11 @@ function renderListEmployees(container, listKey, listTitle) {
         });
     });
     
+    // SUBTRACT 1 FROM GRAND EXISTING ONLY FOR LIST-MODEL-A
+    if (listKey === 'listA') {
+        grandExisting = grandExisting - 1;
+    }
+    
     let html = `
         <div class="section-header">
             <h3><i class="fa fa-users"></i> ${escapeHtml(listTitle)} - Employees by Unit</h3>
@@ -1277,6 +1286,11 @@ function renderListEmployees(container, listKey, listTitle) {
         sortByName(proposed);
         sortByName(eliminated);
         
+        // Unit totals - NO CHANGE (keep as is)
+        const unitExisting = existing.length;
+        const unitProposed = proposed.length;
+        const unitEliminated = eliminated.length;
+        
         const maxRows = Math.max(existing.length, proposed.length, eliminated.length);
         const unitId = 'emp_unit_' + listKey + '_' + unit.replace(/[^a-zA-Z0-9]/g, '_');
         
@@ -1288,9 +1302,9 @@ function renderListEmployees(container, listKey, listTitle) {
                         ${escapeHtml(unit)}
                     </span>
                     <div class="unit-totals">
-                        <span>👥 Existing: <span class="num">${existing.length}</span></span>
-                        <span>✅ Proposed: <span class="num">${proposed.length}</span></span>
-                        <span>❌ Eliminated: <span class="num">${eliminated.length}</span></span>
+                        <span>👥 Existing: <span class="num">${unitExisting}</span></span>
+                        <span>✅ Proposed: <span class="num">${unitProposed}</span></span>
+                        <span>❌ Eliminated: <span class="num">${unitEliminated}</span></span>
                     </div>
                 </div>
                 <div class="unit-body" id="${unitId}">
